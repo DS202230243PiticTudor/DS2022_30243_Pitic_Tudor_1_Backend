@@ -16,4 +16,6 @@ public interface PersonRepository extends JpaRepository<Person, UUID> {
     @Query("select i from Person i order by i.createdDate")
     List<Person> findAll();
     Optional<Person> findById(UUID id);
+    Optional<Person> findPersonByUsername(String username);
+    Optional<Person> findPersonByEmail(String email);
 }

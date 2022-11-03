@@ -4,7 +4,7 @@ import com.ds.management.domain.dtos.PersonCreateDTO;
 import com.ds.management.domain.dtos.PersonDeviceDTO;
 import com.ds.management.domain.dtos.PersonUpdateDTO;
 import com.ds.management.domain.entities.Person;
-import com.ds.management.services.PersonService;
+import com.ds.management.services.impl.PersonServiceImpl;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -16,10 +16,10 @@ import java.util.UUID;
 @RestController
 @RequestMapping(value = "/persons")
 public class PersonController {
-    private final PersonService personService;
+    private final PersonServiceImpl personService;
 
     @Autowired
-    public  PersonController(PersonService personService) {
+    public  PersonController(PersonServiceImpl personService) {
         this.personService = personService;
     }
 
