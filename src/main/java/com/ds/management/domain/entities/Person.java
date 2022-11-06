@@ -36,7 +36,7 @@ public class Person implements Serializable {
     private String password;
     @Column(name = "email", nullable = false)
     private String email;
-    private String[] roles;
+    private String role;
     private String[] authorities;
     private boolean isActive;
     private boolean isNotLocked;

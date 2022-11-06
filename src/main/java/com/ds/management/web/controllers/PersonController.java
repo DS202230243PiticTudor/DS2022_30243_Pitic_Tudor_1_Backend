@@ -4,9 +4,13 @@ import com.ds.management.domain.dtos.PersonCreateDTO;
 import com.ds.management.domain.dtos.PersonDeviceDTO;
 import com.ds.management.domain.dtos.PersonUpdateDTO;
 import com.ds.management.domain.entities.Person;
+import com.ds.management.exception.domain.EmailExistException;
 import com.ds.management.exception.domain.ExceptionHandling;
+import com.ds.management.exception.domain.UserNotFoundException;
+import com.ds.management.exception.domain.UsernameExistException;
 import com.ds.management.services.impl.PersonServiceImpl;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -69,8 +73,9 @@ public class PersonController extends ExceptionHandling {
         }
     }
 
-    @GetMapping("/test")
-    public String showTest() {
-        return "test";
-    }
+   @PostMapping("/register")
+    public ResponseEntity<String> register(@RequestBody PersonCreateDTO dto) throws UserNotFoundException, EmailExistException, UsernameExistException {
+        String id = personService.register(dto);
+        return ResponseEntity.ok().body(id);
+   }
 }

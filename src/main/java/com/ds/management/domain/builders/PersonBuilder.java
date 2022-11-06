@@ -13,9 +13,12 @@ public class PersonBuilder {
                 .username(person.getUsername())
                 .email(person.getEmail())
                 .password(person.getPassword())
+                .role(person.getRole())
+                .authorities(person.getAuthorities())
                 .build();
     }
 
+    @Deprecated
     public Person toEntityUpdate(PersonUpdateDTO dto) {
         return Person.builder()
                 .id(dto.getId())
