@@ -1,6 +1,5 @@
 package com.ds.management.security.configuration;
 
-import com.ds.management.security.constant.SecurityConstant;
 import com.ds.management.security.filter.JwtAccessDeniedHandler;
 import com.ds.management.security.filter.JwtAuthenticationEntryPoint;
 import com.ds.management.security.filter.JwtAuthorizationFilter;
@@ -18,6 +17,8 @@ import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+
+import static com.ds.management.security.constant.SecurityConstant.*;
 
 @Configuration
 @EnableWebSecurity
@@ -52,7 +53,7 @@ public class SecurityConfiguration extends WebSecurityConfigurerAdapter {
     protected void configure(HttpSecurity http) throws Exception {
         http.csrf().disable().cors().and()
                 .sessionManagement().sessionCreationPolicy(SessionCreationPolicy.STATELESS)
-                .and().authorizeRequests().antMatchers(SecurityConstant.PUBLIC_URLS).permitAll()
+                .and().authorizeRequests().antMatchers(PUBLIC_URLS).permitAll()
                 .anyRequest().authenticated()
                 .and()
                 .exceptionHandling().accessDeniedHandler(jwtAccessDeniedHandler)

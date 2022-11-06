@@ -4,6 +4,7 @@ import com.ds.management.domain.dtos.PersonCreateDTO;
 import com.ds.management.domain.dtos.PersonDeviceDTO;
 import com.ds.management.domain.dtos.PersonUpdateDTO;
 import com.ds.management.domain.entities.Person;
+import com.ds.management.exception.domain.ExceptionHandling;
 import com.ds.management.services.impl.PersonServiceImpl;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
@@ -14,8 +15,8 @@ import java.util.List;
 import java.util.UUID;
 
 @RestController
-@RequestMapping(value = "/persons")
-public class PersonController {
+@RequestMapping(path = {"/","/persons"})
+public class PersonController extends ExceptionHandling {
     private final PersonServiceImpl personService;
 
     @Autowired
@@ -66,5 +67,10 @@ public class PersonController {
             e.printStackTrace();
             return ResponseEntity.notFound().build();
         }
+    }
+
+    @GetMapping("/test")
+    public String showTest() {
+        return "test";
     }
 }
