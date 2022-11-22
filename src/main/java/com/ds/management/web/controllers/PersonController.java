@@ -12,6 +12,7 @@ import com.ds.management.services.impl.PersonServiceImpl;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import javax.persistence.EntityNotFoundException;
@@ -19,7 +20,7 @@ import java.util.List;
 import java.util.UUID;
 
 @RestController
-@RequestMapping(path = {"/","/persons"})
+@RequestMapping(path = {"/persons"})
 public class PersonController extends ExceptionHandling {
     private final PersonServiceImpl personService;
 
@@ -29,48 +30,36 @@ public class PersonController extends ExceptionHandling {
     }
 
     @GetMapping()
+    @PreAuthorize("hasAnyAuthority('user:read')")
     public List<PersonDeviceDTO> getAll() {
         return this.personService.findAll();
     }
 
     @GetMapping(value = "/{id}")
-    public ResponseEntity getItem(@PathVariable("id") UUID id) {
-        try {
-            return personService.findById(id);
-        } catch (Exception e) {
-            e.printStackTrace();
-            return ResponseEntity.notFound().build();
-        }
+    @PreAuthorize("hasAnyAuthority('user:read')")
+    public ResponseEntity<PersonDeviceDTO> getItem(@PathVariable("id") UUID id) {
+        PersonDeviceDTO dto = this.personService.findById(id);
+        return ResponseEntity.ok().body(dto);
     }
 
-    @PutMapping()
-    public ResponseEntity<String> create(@RequestBody PersonCreateDTO dto) {
-        try {
-            return personService.create(dto);
-        } catch (Exception e) {
-            e.printStackTrace();
-            return ResponseEntity.internalServerError().body("Couldn't create new " + Person.class.getSimpleName());
-        }
+    @PostMapping("/create")
+    @PreAuthorize("hasAnyAuthority('user:create')")
+    public ResponseEntity<PersonDeviceDTO> create(@RequestBody PersonCreateDTO dto) throws UserNotFoundException, EmailExistException, UsernameExistException {
+        PersonDeviceDTO personDeviceDTO = this.personService.addNewPerson(dto);
+        return ResponseEntity.ok().body(personDeviceDTO);
     }
 
     @DeleteMapping(value = "/{id}")
-    public ResponseEntity<Boolean> delete(@PathVariable("id") UUID id) {
-        try {
-            return personService.deleteById(id);
-        } catch (EntityNotFoundException e) {
-            e.printStackTrace();
-            return ResponseEntity.notFound().build();
-        }
+    @PreAuthorize("hasAnyAuthority('user:delete')")
+    public void delete(@PathVariable("id") UUID id) {
+        this.personService.deleteById(id);
     }
 
-    @PostMapping()
-    public ResponseEntity<PersonDeviceDTO> update(@RequestBody PersonUpdateDTO dto) {
-        try {
-            return personService.update(dto);
-        } catch (EntityNotFoundException e) {
-            e.printStackTrace();
-            return ResponseEntity.notFound().build();
-        }
+    @PostMapping("/update")
+    @PreAuthorize("hasAnyAuthority('user:update')")
+    public ResponseEntity<PersonDeviceDTO> update(@RequestBody PersonUpdateDTO dto) throws UserNotFoundException, EmailExistException, UsernameExistException, EntityNotFoundException {
+        PersonDeviceDTO personDeviceDTO = this.personService.updatePerson(dto);
+        return ResponseEntity.ok().body(personDeviceDTO);
     }
 
    @PostMapping("/register")

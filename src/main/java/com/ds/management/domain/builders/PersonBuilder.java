@@ -10,21 +10,13 @@ public class PersonBuilder {
     public PersonDeviceDTO toDTO(Person person) {
         return PersonDeviceDTO.builder()
                 .id(person.getId())
+                .firstName(person.getFirstName())
+                .lastName(person.getLastName())
                 .username(person.getUsername())
                 .email(person.getEmail())
-                .password(person.getPassword())
                 .role(person.getRole())
-                .authorities(person.getAuthorities())
-                .build();
-    }
-
-    @Deprecated
-    public Person toEntityUpdate(PersonUpdateDTO dto) {
-        return Person.builder()
-                .id(dto.getId())
-                .email(dto.getEmail())
-                .username(dto.getUsername())
-                .password(dto.getPassword())
+                .isNotLocked(person.isNotLocked())
+                .isActive(person.isActive())
                 .build();
     }
 

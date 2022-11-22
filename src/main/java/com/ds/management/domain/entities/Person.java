@@ -40,4 +40,5 @@ public class Person implements Serializable {
     private String[] authorities;
     private boolean isActive;
     private boolean isNotLocked;
+
 }

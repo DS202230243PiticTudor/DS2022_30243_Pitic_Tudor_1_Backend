@@ -12,9 +12,11 @@ import java.util.UUID;
 @Builder
 public class PersonDeviceDTO {
     private UUID id;
+    private String firstName;
+    private String lastName;
     private String username;
-    private String password;
     private String email;
     private String role;
-    private String[] authorities;
+    private boolean isActive;
+    private boolean isNotLocked;
 }
