@@ -1,16 +1,15 @@
 package com.ds.management.web.controllers;
 
+import com.ds.management.domain.dtos.DeviceDTO;
 import com.ds.management.domain.dtos.PersonCreateDTO;
 import com.ds.management.domain.dtos.PersonDeviceDTO;
 import com.ds.management.domain.dtos.PersonUpdateDTO;
-import com.ds.management.domain.entities.Person;
 import com.ds.management.exception.domain.EmailExistException;
 import com.ds.management.exception.domain.ExceptionHandling;
 import com.ds.management.exception.domain.UserNotFoundException;
 import com.ds.management.exception.domain.UsernameExistException;
 import com.ds.management.services.impl.PersonServiceImpl;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
@@ -40,6 +39,12 @@ public class PersonController extends ExceptionHandling {
     public ResponseEntity<PersonDeviceDTO> getItem(@PathVariable("id") UUID id) {
         PersonDeviceDTO dto = this.personService.findById(id);
         return ResponseEntity.ok().body(dto);
+    }
+
+    @GetMapping(value = "/devices/{id}")
+    @PreAuthorize("hasAnyAuthority('user:read')")
+    public List<DeviceDTO> getDevices(@PathVariable("id") UUID id) {
+        return this.personService.getPersonDevices(id);
     }
 
     @PostMapping("/create")

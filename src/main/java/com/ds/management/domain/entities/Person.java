@@ -8,6 +8,7 @@ import org.hibernate.annotations.Type;
 import javax.persistence.*;
 import java.io.Serializable;
 import java.util.Date;
+import java.util.List;
 import java.util.UUID;
 
 @Getter
@@ -17,6 +18,7 @@ import java.util.UUID;
 @ToString
 @Builder
 @Entity
+@Table(name = "person")
 public class Person implements Serializable {
     @Id
     @GeneratedValue(generator = "uuid2")
@@ -40,5 +42,9 @@ public class Person implements Serializable {
     private String[] authorities;
     private boolean isActive;
     private boolean isNotLocked;
+
+    @OneToMany(mappedBy = "person")
+    @ToString.Exclude
+    private List<Device> devices;
 
 }

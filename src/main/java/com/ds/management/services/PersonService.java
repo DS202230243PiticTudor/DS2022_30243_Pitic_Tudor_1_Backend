@@ -1,5 +1,6 @@
 package com.ds.management.services;
 
+import com.ds.management.domain.dtos.DeviceDTO;
 import com.ds.management.domain.dtos.PersonCreateDTO;
 import com.ds.management.domain.dtos.PersonDeviceDTO;
 import com.ds.management.domain.dtos.PersonUpdateDTO;
@@ -24,4 +25,5 @@ public interface PersonService {
     PersonDeviceDTO updatePerson(PersonUpdateDTO dto) throws UserNotFoundException, EmailExistException, UsernameExistException, EntityNotFoundException;
 
     void deleteById(UUID id) throws EntityNotFoundException;
+    List<DeviceDTO> getPersonDevices(UUID personId);
 }

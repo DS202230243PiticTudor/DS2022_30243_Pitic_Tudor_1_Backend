@@ -1,6 +1,7 @@
 package com.ds.management.services.impl;
 
 import com.ds.management.domain.builders.PersonBuilder;
+import com.ds.management.domain.dtos.DeviceDTO;
 import com.ds.management.domain.dtos.PersonCreateDTO;
 import com.ds.management.domain.dtos.PersonDeviceDTO;
 import com.ds.management.domain.dtos.PersonUpdateDTO;
@@ -26,10 +27,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import javax.persistence.EntityNotFoundException;
-import java.util.Date;
-import java.util.List;
-import java.util.Optional;
-import java.util.UUID;
+import java.util.*;
 import java.util.stream.Collectors;
 
 import static com.ds.management.domain.enumeration.Role.*;
@@ -41,6 +39,8 @@ public class PersonServiceImpl implements PersonService, UserDetailsService {
     public static final String NO_PERSON_FOUND_BY_USERNAME = "No person found by username: ";
     public static final String USERNAME_ALREADY_EXISTS = "Username already exists";
     public static final String EMAIL_ALREADY_EXISTS = "Email already exists";
+
+    private DeviceServiceImpl deviceService;
     private final PersonRepository personRepository;
     private final ModelMapper modelMapper;
     private final PersonBuilder builder;
@@ -49,11 +49,13 @@ public class PersonServiceImpl implements PersonService, UserDetailsService {
 
     @Autowired
     public PersonServiceImpl(
+            DeviceServiceImpl deviceService,
             PersonRepository personRepository,
             ModelMapper modelMapper,
             PersonBuilder builder,
             BCryptPasswordEncoder passwordEncoder
             ) {
+        this.deviceService = deviceService;
         this.personRepository = personRepository;
         this.modelMapper = modelMapper;
         this.builder = builder;
@@ -82,6 +84,7 @@ public class PersonServiceImpl implements PersonService, UserDetailsService {
         person.setNotLocked(true);
         person.setRole(dto.getRole());
         person.setAuthorities(getRoleEnumName(dto.getRole()).getAuthorities());
+        person.setDevices(new LinkedList<>());
         personRepository.save(person);
         LOGGER.info("New user password: " + dto.getPassword());
         return person.getId().toString();
@@ -150,6 +153,7 @@ public class PersonServiceImpl implements PersonService, UserDetailsService {
         person.setPassword(encodedPassword);
         person.setRole(getRoleEnumName(dto.getRole()).name());
         person.setAuthorities(getRoleEnumName(dto.getRole()).getAuthorities());
+        person.setDevices(new LinkedList<>());
         personRepository.save(person);
         return this.modelMapper.map(person, PersonDeviceDTO.class);
     }
@@ -175,6 +179,7 @@ public class PersonServiceImpl implements PersonService, UserDetailsService {
         person.setPassword(personOptional.get().getPassword());
         person.setRole(personOptional.get().getRole());
         person.setAuthorities(personOptional.get().getAuthorities());
+        person.setDevices(personOptional.get().getDevices());
         personRepository.save(person);
         return this.modelMapper.map(person, PersonDeviceDTO.class);
     }
@@ -207,7 +212,18 @@ public class PersonServiceImpl implements PersonService, UserDetailsService {
         if (personOptional.isEmpty()) {
             throw new EntityNotFoundException(Person.class.getSimpleName() + " with id: " + id);
         }
+        personOptional.get().getDevices().forEach(device -> this.deviceService.deleteById(device.getId()));
         personRepository.deleteById(id);
     }
 
+    @Override
+    public List<DeviceDTO> getPersonDevices(UUID personId) {
+        Optional<Person> personOptional = this.personRepository.findById(personId);
+        if (personOptional.isEmpty()) {
+            throw new EntityNotFoundException(Person.class.getSimpleName() + " with id: " + personId);
+        }
+        return personOptional.get().getDevices().stream()
+                .map(device -> this.modelMapper.map(device, DeviceDTO.class))
+                .collect(Collectors.toList());
+    }
 }
