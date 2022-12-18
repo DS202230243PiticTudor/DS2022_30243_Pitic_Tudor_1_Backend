@@ -43,8 +43,12 @@ public class Person implements Serializable {
     private boolean isActive;
     private boolean isNotLocked;
 
-    @OneToMany(mappedBy = "person")
+    @OneToMany(mappedBy = "person", orphanRemoval = true)
     @ToString.Exclude
     private List<Device> devices;
+
+    @OneToMany(mappedBy = "person", orphanRemoval = true)
+    @ToString.Exclude
+    private List<Measurement> measurements;
 
 }

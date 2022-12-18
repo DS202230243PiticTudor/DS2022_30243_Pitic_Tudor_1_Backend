@@ -1,13 +1,11 @@
 package com.ds.management.services.impl;
 
 import com.ds.management.domain.builders.PersonBuilder;
-import com.ds.management.domain.dtos.DeviceDTO;
-import com.ds.management.domain.dtos.PersonCreateDTO;
-import com.ds.management.domain.dtos.PersonDeviceDTO;
-import com.ds.management.domain.dtos.PersonUpdateDTO;
-import com.ds.management.domain.entities.Person;
-import com.ds.management.domain.entities.UserPrincipal;
+import com.ds.management.domain.dtos.*;
+import com.ds.management.domain.entities.*;
 import com.ds.management.domain.enumeration.Role;
+import com.ds.management.domain.repositories.DeviceReadingPairRepository;
+import com.ds.management.domain.repositories.MeasurementRepository;
 import com.ds.management.domain.repositories.PersonRepository;
 import com.ds.management.exception.domain.EmailExistException;
 import com.ds.management.exception.domain.UserNotFoundException;
@@ -30,8 +28,6 @@ import javax.persistence.EntityNotFoundException;
 import java.util.*;
 import java.util.stream.Collectors;
 
-import static com.ds.management.domain.enumeration.Role.*;
-
 @Service
 @Transactional
 @Qualifier("personDetailsService")
@@ -42,6 +38,8 @@ public class PersonServiceImpl implements PersonService, UserDetailsService {
 
     private DeviceServiceImpl deviceService;
     private final PersonRepository personRepository;
+    private final DeviceReadingPairRepository deviceReadingPairRepository;
+    private final MeasurementRepository measurementRepository;
     private final ModelMapper modelMapper;
     private final PersonBuilder builder;
     private BCryptPasswordEncoder passwordEncoder;
@@ -51,12 +49,16 @@ public class PersonServiceImpl implements PersonService, UserDetailsService {
     public PersonServiceImpl(
             DeviceServiceImpl deviceService,
             PersonRepository personRepository,
+            DeviceReadingPairRepository deviceReadingPairRepository,
+            MeasurementRepository measurementRepository,
             ModelMapper modelMapper,
             PersonBuilder builder,
             BCryptPasswordEncoder passwordEncoder
             ) {
         this.deviceService = deviceService;
         this.personRepository = personRepository;
+        this.deviceReadingPairRepository = deviceReadingPairRepository;
+        this.measurementRepository = measurementRepository;
         this.modelMapper = modelMapper;
         this.builder = builder;
         this.passwordEncoder = passwordEncoder;
@@ -85,6 +87,7 @@ public class PersonServiceImpl implements PersonService, UserDetailsService {
         person.setRole(dto.getRole());
         person.setAuthorities(getRoleEnumName(dto.getRole()).getAuthorities());
         person.setDevices(new LinkedList<>());
+        person.setMeasurements(new LinkedList<>());
         personRepository.save(person);
         LOGGER.info("New user password: " + dto.getPassword());
         return person.getId().toString();
@@ -154,6 +157,7 @@ public class PersonServiceImpl implements PersonService, UserDetailsService {
         person.setRole(getRoleEnumName(dto.getRole()).name());
         person.setAuthorities(getRoleEnumName(dto.getRole()).getAuthorities());
         person.setDevices(new LinkedList<>());
+        person.setMeasurements(new LinkedList<>());
         personRepository.save(person);
         return this.modelMapper.map(person, PersonDeviceDTO.class);
     }
@@ -180,6 +184,7 @@ public class PersonServiceImpl implements PersonService, UserDetailsService {
         person.setRole(personOptional.get().getRole());
         person.setAuthorities(personOptional.get().getAuthorities());
         person.setDevices(personOptional.get().getDevices());
+        person.setMeasurements(personOptional.get().getMeasurements());
         personRepository.save(person);
         return this.modelMapper.map(person, PersonDeviceDTO.class);
     }
@@ -212,7 +217,7 @@ public class PersonServiceImpl implements PersonService, UserDetailsService {
         if (personOptional.isEmpty()) {
             throw new EntityNotFoundException(Person.class.getSimpleName() + " with id: " + id);
         }
-        personOptional.get().getDevices().forEach(device -> this.deviceService.deleteById(device.getId()));
+//        personOptional.get().getDevices().forEach(device -> this.deviceService.deleteById(device.getId()));
         personRepository.deleteById(id);
     }
 
@@ -225,5 +230,76 @@ public class PersonServiceImpl implements PersonService, UserDetailsService {
         return personOptional.get().getDevices().stream()
                 .map(device -> this.modelMapper.map(device, DeviceDTO.class))
                 .collect(Collectors.toList());
+    }
+
+    @Override
+    public void makeMeasurement(UUID personId) {
+        Optional<Person> personOptional = this.personRepository.findById(personId);
+        if (personOptional.isEmpty()) {
+            throw new EntityNotFoundException(Person.class.getSimpleName() + " with id: " + personId);
+        }
+        Person person = personOptional.get();
+        List<Device> devices = person.getDevices();
+        List<Measurement> measurements = person.getMeasurements();
+        List<DeviceReadingPair> pairs = new LinkedList<>();
+        DeviceReadingPair pair;
+        Measurement measurement = Measurement.builder()
+                .createdDate(new Date())
+                .totalMeasurement(0.0)
+                .person(person)
+                .build();
+        double totalReading = 0;
+        double currentPairReading;
+        for (Device device : devices) {
+            currentPairReading = Math.random() * device.getMaxEnergyConsumption();
+            totalReading += currentPairReading;
+            pair = DeviceReadingPair.builder()
+                    .deviceId(device.getId())
+                    .reading(currentPairReading)
+                    .measurement(measurement)
+                    .build();
+            this.deviceReadingPairRepository.save(pair);
+            pairs.add(pair);
+        }
+        measurement.setTotalMeasurement(totalReading);
+        measurement.setDeviceReadingPairs(pairs);
+        measurements.add(measurement);
+        this.measurementRepository.save(measurement);
+        person.setMeasurements(measurements);
+        this.personRepository.save(person);
+    }
+
+    // to dto baby
+    @Override
+    public List<MeasurementDTO> getMeasurements(UUID personId) {
+        Optional<Person> personOptional = this.personRepository.findById(personId);
+        if (personOptional.isEmpty()) {
+            throw new EntityNotFoundException(Person.class.getSimpleName() + " with id: " + personId);
+        }
+//        List<Measurement> measurements = personOptional.get().getMeasurements();
+        List<Measurement> measurements = measurementRepository.findMeasurementsByPersonOrderByCreatedDateAsc(personOptional.get());
+        List<MeasurementDTO> measurementDTOS = new LinkedList<>();
+        List<DeviceReadingPairDTO> deviceReadingPairDTOS;
+        for (Measurement measurement : measurements) {
+            deviceReadingPairDTOS = new LinkedList<>();
+            for(DeviceReadingPair deviceReadingPair : measurement.getDeviceReadingPairs()) {
+                deviceReadingPairDTOS.add(
+                        DeviceReadingPairDTO.builder()
+                                .id(deviceReadingPair.getId())
+                                .deviceId(deviceReadingPair.getDeviceId())
+                                .reading(deviceReadingPair.getReading())
+                                .build()
+                );
+            }
+            measurementDTOS.add(
+                    MeasurementDTO.builder()
+                    .id(measurement.getId())
+                    .createdDate(measurement.getCreatedDate())
+                    .totalMeasurement(measurement.getTotalMeasurement())
+                    .deviceReadingPairs(deviceReadingPairDTOS)
+                    .build()
+            );
+        }
+        return measurementDTOS;
     }
 }

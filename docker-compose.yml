@@ -1,0 +1,79 @@
+version: '3'
+
+services:
+
+  postgres-db:
+    image: postgres
+
+#    healthcheck:
+#      test: ["CMD", "pg_isready", "-q", "-d", "ds-database", "-U", "postgres"]
+#      timeout: 45s
+#      interval: 10s
+#      retries: 5
+    restart: always
+    environment:
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+      - POSTGRES_DB=ds-database
+      - POSTGRES_HOST_AUTH_METHOD=trust
+    ports:
+      - "5433"
+    container_name: postgres-db
+    networks:
+      - DS_SQL_SPRING
+
+
+  #  backend:
+  #    image: backend
+  #    restart: always
+  #    ports:
+  #      - "8080:8080"
+  #    environment:
+  #      #- DB_IP=172.22.0.2
+  ##      - DB_IP=demo-db
+  ##      - RABBIT_IP=demo-rabbit
+  #      - DB_IP=postgres
+  #      - DB_PORT=5433
+  #      - DB_USER=postgres
+  #      - DB_PASSWORD=postgres
+  #      - DB_DBNAME=energy_platform
+  #    depends_on:
+  #      - postgres-db
+  #          condition: service_healthy
+
+  backend:
+    depends_on:
+      - postgres-db
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: management-app-be
+    env_file:
+      - environment.env
+    ports:
+      - 8080:8080
+    expose:
+      - 8080
+    networks:
+      - DS_SQL_SPRING
+
+  frontend:
+    build:
+      context: ~/Desktop/stuff/DS/fe/management-app-fe
+      dockerfile: ./Dockerfile
+    depends_on:
+      - postgres-db
+      - backend
+    env_file:
+      - environment.env
+    container_name: management-app-fe
+    ports:
+      - 4200:4200
+    expose:
+      - 4200
+    networks:
+      - DS_SQL_SPRING
+
+networks:
+  DS_SQL_SPRING:
+    driver: bridge

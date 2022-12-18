@@ -1,9 +1,7 @@
 package com.ds.management.services;
 
-import com.ds.management.domain.dtos.DeviceDTO;
-import com.ds.management.domain.dtos.PersonCreateDTO;
-import com.ds.management.domain.dtos.PersonDeviceDTO;
-import com.ds.management.domain.dtos.PersonUpdateDTO;
+import com.ds.management.domain.dtos.*;
+import com.ds.management.domain.entities.Measurement;
 import com.ds.management.domain.entities.Person;
 import com.ds.management.exception.domain.EmailExistException;
 import com.ds.management.exception.domain.UserNotFoundException;
@@ -26,4 +24,6 @@ public interface PersonService {
 
     void deleteById(UUID id) throws EntityNotFoundException;
     List<DeviceDTO> getPersonDevices(UUID personId);
+    void makeMeasurement(UUID personId);
+    List<MeasurementDTO> getMeasurements(UUID personId);
 }

@@ -1,9 +1,7 @@
 package com.ds.management.web.controllers;
 
-import com.ds.management.domain.dtos.DeviceDTO;
-import com.ds.management.domain.dtos.PersonCreateDTO;
-import com.ds.management.domain.dtos.PersonDeviceDTO;
-import com.ds.management.domain.dtos.PersonUpdateDTO;
+import com.ds.management.domain.dtos.*;
+import com.ds.management.domain.entities.Measurement;
 import com.ds.management.exception.domain.EmailExistException;
 import com.ds.management.exception.domain.ExceptionHandling;
 import com.ds.management.exception.domain.UserNotFoundException;
@@ -35,14 +33,14 @@ public class PersonController extends ExceptionHandling {
     }
 
     @GetMapping(value = "/{id}")
-    @PreAuthorize("hasAnyAuthority('user:read')")
+    @PreAuthorize("hasAnyAuthority('user:read', 'device:read')")
     public ResponseEntity<PersonDeviceDTO> getItem(@PathVariable("id") UUID id) {
         PersonDeviceDTO dto = this.personService.findById(id);
         return ResponseEntity.ok().body(dto);
     }
 
     @GetMapping(value = "/devices/{id}")
-    @PreAuthorize("hasAnyAuthority('user:read')")
+    @PreAuthorize("hasAnyAuthority('user:read', 'device:read')")
     public List<DeviceDTO> getDevices(@PathVariable("id") UUID id) {
         return this.personService.getPersonDevices(id);
     }
@@ -72,4 +70,16 @@ public class PersonController extends ExceptionHandling {
         String id = personService.register(dto);
         return ResponseEntity.ok().body(id);
    }
+
+   @PostMapping("measure/{person_id}")
+   @PreAuthorize("hasAnyAuthority('user:read', 'device:read')")
+   public void makeMeasurement(@PathVariable("person_id") UUID personId) {
+        this.personService.makeMeasurement(personId);
+   }
+
+    @GetMapping("measure/{person_id}")
+    @PreAuthorize("hasAnyAuthority('user:read', 'device:read')")
+    public List<MeasurementDTO> getMeasurements(@PathVariable("person_id") UUID personId) {
+        return this.personService.getMeasurements(personId);
+    }
 }
