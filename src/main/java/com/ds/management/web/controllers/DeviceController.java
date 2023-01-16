@@ -30,7 +30,7 @@ public class DeviceController extends ExceptionHandling {
     }
 
     @GetMapping("/person/{id}")
-    @PreAuthorize("hasAnyAuthority('device:read')")
+//    @PreAuthorize("hasAnyAuthority('device:read')")
     public List<DeviceDTO> getAllByPersonId(@PathVariable("id") UUID id) {
         return this.deviceService.findAllByPersonId(id);
     }

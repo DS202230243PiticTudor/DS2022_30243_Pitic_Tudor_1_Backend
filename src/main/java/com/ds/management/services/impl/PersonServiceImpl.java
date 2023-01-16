@@ -269,6 +269,29 @@ public class PersonServiceImpl implements PersonService, UserDetailsService {
         this.personRepository.save(person);
     }
 
+    public void makeMeasurementWithDeviceReadingPairList(UUID personId, List<DeviceReadingPair> pairs, Date createdDate) {
+        Optional<Person> personOptional = this.personRepository.findById(personId);
+        if (personOptional.isEmpty()) {
+            throw new EntityNotFoundException(Person.class.getSimpleName() + " with id: " + personId);
+        }
+        Person person = personOptional.get();
+        List<Measurement> measurements = person.getMeasurements();
+        double totalReading = 0;
+        for(DeviceReadingPair pair : pairs) {
+            totalReading += pair.getReading();
+            this.deviceReadingPairRepository.save(pair);
+        }
+        Measurement measurement = Measurement.builder()
+                .createdDate(createdDate)
+                .totalMeasurement(totalReading)
+                .person(person)
+                .deviceReadingPairs(pairs)
+                .build();
+        this.measurementRepository.save(measurement);
+        person.setMeasurements(measurements);
+        this.personRepository.save(person);
+    }
+
     // to dto baby
     @Override
     public List<MeasurementDTO> getMeasurements(UUID personId) {
