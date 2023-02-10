@@ -9,6 +9,7 @@ import javax.persistence.*;
 import java.io.Serializable;
 import java.util.Date;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
 @Getter
@@ -38,9 +39,15 @@ public class Person implements Serializable {
     private String password;
     @Column(name = "email", nullable = false)
     private String email;
+    @Column(name = "avatar_color", nullable = false)
+    private String avatarColor;
+    @Column(name = "role", nullable = false)
     private String role;
+    @Column(name = "authorities", nullable = false)
     private String[] authorities;
+    @Column(name = "is_active", nullable = false)
     private boolean isActive;
+    @Column(name = "is_not_locked", nullable = false)
     private boolean isNotLocked;
 
     @OneToMany(mappedBy = "person", orphanRemoval = true)
@@ -51,4 +58,7 @@ public class Person implements Serializable {
     @ToString.Exclude
     private List<Measurement> measurements;
 
+    @OneToMany(mappedBy = "person", orphanRemoval = true)
+    @ToString.Exclude
+    private Map<UUID, IndividualChat> individualChatMap;
 }

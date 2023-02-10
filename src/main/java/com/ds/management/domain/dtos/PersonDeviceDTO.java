@@ -16,6 +16,7 @@ public class PersonDeviceDTO {
     private String lastName;
     private String username;
     private String email;
+    private String avatarColor;
     private String role;
     private boolean isActive;
     private boolean isNotLocked;

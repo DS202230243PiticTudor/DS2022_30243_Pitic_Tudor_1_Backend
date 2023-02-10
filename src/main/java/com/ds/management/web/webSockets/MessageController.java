@@ -1,6 +1,6 @@
 package com.ds.management.web.webSockets;
 
-import com.ds.management.domain.dtos.Message;
+import com.ds.management.domain.dtos.SimpleMessage;
 import com.ds.management.domain.dtos.ResponseMessage;
 import com.ds.management.services.WebSocketService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -24,21 +24,21 @@ public class MessageController {
 
     @MessageMapping("/message") // ws/messages - receiving endpoint (this is where the frontend sends messages)
     @SendTo("/topic/messages") // departure endpoint (this is where the frontend listens)
-    public ResponseMessage getMessage(final Message message) throws InterruptedException {
+    public ResponseMessage getMessage(final SimpleMessage simpleMessage) throws InterruptedException {
         Thread.sleep(1000);
-        return new ResponseMessage(HtmlUtils.htmlEscape(message.getMessageContent()));
+        return new ResponseMessage(HtmlUtils.htmlEscape(simpleMessage.getMessageContent()));
     }
 
     @MessageMapping("/private-message") // ws/private-messages - receiving endpoint (this is where the frontend sends messages)
     @SendToUser("/topic/private-messages") // departure endpoint (this is where the frontend listens)
-    public ResponseMessage getPrivateMessage(final Message message, final Principal principal) throws InterruptedException {
+    public ResponseMessage getPrivateMessage(final SimpleMessage simpleMessage, final Principal principal) throws InterruptedException {
         Thread.sleep(1000);
-        return new ResponseMessage(HtmlUtils.htmlEscape(message.getMessageContent()));
+        return new ResponseMessage(HtmlUtils.htmlEscape(simpleMessage.getMessageContent()));
     }
 
     @MessageMapping("/private-message-notification")
-    public void receiveSignalAndSendNotification(final Message message) {
-        String personId = message.getMessageContent();
+    public void receiveSignalAndSendNotification(final SimpleMessage simpleMessage) {
+        String personId = simpleMessage.getMessageContent();
         this.webSocketService.notifyFrontendUserAndDeleteNotifications(personId);
     }
 }

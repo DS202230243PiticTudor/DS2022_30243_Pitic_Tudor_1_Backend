@@ -13,6 +13,7 @@ public class PersonBuilder {
                 .lastName(person.getLastName())
                 .username(person.getUsername())
                 .email(person.getEmail())
+                .avatarColor(person.getAvatarColor())
                 .role(person.getRole())
                 .isNotLocked(person.isNotLocked())
                 .isActive(person.isActive())

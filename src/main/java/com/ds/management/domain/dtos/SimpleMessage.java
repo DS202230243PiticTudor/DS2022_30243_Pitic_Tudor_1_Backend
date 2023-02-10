@@ -7,6 +7,6 @@ import lombok.*;
 @AllArgsConstructor
 @NoArgsConstructor
 @Builder
-public class Message {
+public class SimpleMessage {
     private String messageContent;
 }

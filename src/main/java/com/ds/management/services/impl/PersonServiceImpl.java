@@ -36,7 +36,6 @@ public class PersonServiceImpl implements PersonService, UserDetailsService {
     public static final String USERNAME_ALREADY_EXISTS = "Username already exists";
     public static final String EMAIL_ALREADY_EXISTS = "Email already exists";
 
-    private DeviceServiceImpl deviceService;
     private final PersonRepository personRepository;
     private final DeviceReadingPairRepository deviceReadingPairRepository;
     private final MeasurementRepository measurementRepository;
@@ -47,7 +46,6 @@ public class PersonServiceImpl implements PersonService, UserDetailsService {
 
     @Autowired
     public PersonServiceImpl(
-            DeviceServiceImpl deviceService,
             PersonRepository personRepository,
             DeviceReadingPairRepository deviceReadingPairRepository,
             MeasurementRepository measurementRepository,
@@ -55,7 +53,6 @@ public class PersonServiceImpl implements PersonService, UserDetailsService {
             PersonBuilder builder,
             BCryptPasswordEncoder passwordEncoder
             ) {
-        this.deviceService = deviceService;
         this.personRepository = personRepository;
         this.deviceReadingPairRepository = deviceReadingPairRepository;
         this.measurementRepository = measurementRepository;
@@ -88,6 +85,7 @@ public class PersonServiceImpl implements PersonService, UserDetailsService {
         person.setAuthorities(getRoleEnumName(dto.getRole()).getAuthorities());
         person.setDevices(new LinkedList<>());
         person.setMeasurements(new LinkedList<>());
+        person.setIndividualChatMap(new HashMap<>());
         personRepository.save(person);
         LOGGER.info("New user password: " + dto.getPassword());
         return person.getId().toString();
@@ -125,8 +123,9 @@ public class PersonServiceImpl implements PersonService, UserDetailsService {
 
     @Transactional(readOnly = true)
     public List<PersonDeviceDTO> findAll() {
-        List<Person> items = personRepository.findAll();
-        return items.stream().map(builder::toDTO).collect(Collectors.toList());
+        List<Person> personList = personRepository.findAll();
+        List<PersonDeviceDTO> personDeviceDTOS = personList.stream().map(builder::toDTO).collect(Collectors.toList());
+        return personDeviceDTOS;
     }
 
     @Override
@@ -154,10 +153,12 @@ public class PersonServiceImpl implements PersonService, UserDetailsService {
         person.setCreatedDate(new Date(System.currentTimeMillis()));
         String encodedPassword = encodePassword(person.getPassword());
         person.setPassword(encodedPassword);
+        person.setAvatarColor(this.stringToColour(dto.getUsername()));
         person.setRole(getRoleEnumName(dto.getRole()).name());
         person.setAuthorities(getRoleEnumName(dto.getRole()).getAuthorities());
         person.setDevices(new LinkedList<>());
         person.setMeasurements(new LinkedList<>());
+        person.setIndividualChatMap(new HashMap<>());
         personRepository.save(person);
         return this.modelMapper.map(person, PersonDeviceDTO.class);
     }
@@ -181,13 +182,34 @@ public class PersonServiceImpl implements PersonService, UserDetailsService {
         person.setId(personOptional.get().getId());
         person.setCreatedDate(personOptional.get().getCreatedDate());
         person.setPassword(personOptional.get().getPassword());
+        person.setAvatarColor(this.stringToColour(dto.getUsername()));
         person.setRole(personOptional.get().getRole());
         person.setAuthorities(personOptional.get().getAuthorities());
         person.setDevices(personOptional.get().getDevices());
         person.setMeasurements(personOptional.get().getMeasurements());
+        person.setIndividualChatMap(personOptional.get().getIndividualChatMap());
         personRepository.save(person);
         return this.modelMapper.map(person, PersonDeviceDTO.class);
     }
+
+    /**
+     * A function that generates a random color hex code from a user's username
+     * @param username a string of variable length
+     * @return a string of a hex code
+     */
+    public String stringToColour(String username) {
+        int hash = 0;
+        for (int i = 0; i < username.length(); i++) {
+            hash = username.charAt(i) + ((hash << 5) - hash);
+        }
+        StringBuilder colour = new StringBuilder("#");
+        for (int i = 0; i < 3; i++) {
+            int value = (hash >> (i * 8)) & 0xFF;
+            colour.append(String.format("%02x", value));
+        }
+        return colour.toString();
+    }
+
 
     private Role getRoleEnumName(String role) {
         return Role.valueOf(role);
@@ -217,7 +239,6 @@ public class PersonServiceImpl implements PersonService, UserDetailsService {
         if (personOptional.isEmpty()) {
             throw new EntityNotFoundException(Person.class.getSimpleName() + " with id: " + id);
         }
-//        personOptional.get().getDevices().forEach(device -> this.deviceService.deleteById(device.getId()));
         personRepository.deleteById(id);
     }
 
