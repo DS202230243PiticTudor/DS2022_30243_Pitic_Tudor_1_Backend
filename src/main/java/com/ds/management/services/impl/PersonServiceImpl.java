@@ -5,6 +5,7 @@ import com.ds.management.domain.dtos.*;
 import com.ds.management.domain.entities.*;
 import com.ds.management.domain.enumeration.Role;
 import com.ds.management.domain.repositories.DeviceReadingPairRepository;
+import com.ds.management.domain.repositories.IndividualChatRepository;
 import com.ds.management.domain.repositories.MeasurementRepository;
 import com.ds.management.domain.repositories.PersonRepository;
 import com.ds.management.exception.domain.EmailExistException;
@@ -39,16 +40,18 @@ public class PersonServiceImpl implements PersonService, UserDetailsService {
     private final PersonRepository personRepository;
     private final DeviceReadingPairRepository deviceReadingPairRepository;
     private final MeasurementRepository measurementRepository;
+    private final IndividualChatRepository individualChatRepository;
     private final ModelMapper modelMapper;
     private final PersonBuilder builder;
-    private BCryptPasswordEncoder passwordEncoder;
-    private Logger LOGGER = LoggerFactory.getLogger(getClass());
+    private final BCryptPasswordEncoder passwordEncoder;
+    private final Logger LOGGER = LoggerFactory.getLogger(getClass());
 
     @Autowired
     public PersonServiceImpl(
             PersonRepository personRepository,
             DeviceReadingPairRepository deviceReadingPairRepository,
             MeasurementRepository measurementRepository,
+            IndividualChatRepository individualChatRepository,
             ModelMapper modelMapper,
             PersonBuilder builder,
             BCryptPasswordEncoder passwordEncoder
@@ -56,6 +59,7 @@ public class PersonServiceImpl implements PersonService, UserDetailsService {
         this.personRepository = personRepository;
         this.deviceReadingPairRepository = deviceReadingPairRepository;
         this.measurementRepository = measurementRepository;
+        this.individualChatRepository = individualChatRepository;
         this.modelMapper = modelMapper;
         this.builder = builder;
         this.passwordEncoder = passwordEncoder;
@@ -79,6 +83,7 @@ public class PersonServiceImpl implements PersonService, UserDetailsService {
         person.setCreatedDate(new Date(System.currentTimeMillis()));
         String encodedPassword = encodePassword(person.getPassword());
         person.setPassword(encodedPassword);
+        person.setAvatarColor(this.stringToColour(person.getUsername()));
         person.setActive(true);
         person.setNotLocked(true);
         person.setRole(dto.getRole());
@@ -123,27 +128,25 @@ public class PersonServiceImpl implements PersonService, UserDetailsService {
 
     @Transactional(readOnly = true)
     public List<PersonDeviceDTO> findAll() {
-        List<Person> personList = personRepository.findAll();
-        List<PersonDeviceDTO> personDeviceDTOS = personList.stream().map(builder::toDTO).collect(Collectors.toList());
-        return personDeviceDTOS;
+        List<Person> personList = this.personRepository.findAll();
+        return personList.stream().map(builder::toDTO).collect(Collectors.toList());
+    }
+
+    public List<PersonDeviceDTO> findAllExceptWithId(UUID id) {
+        List<Person> personList = this.personRepository.findAllByIdNot(id);
+        return personList.stream().map(builder::toDTO).collect(Collectors.toList());
     }
 
     @Override
     public PersonDeviceDTO findByUsername(String username) {
         Optional<Person> optional = this.personRepository.findPersonByUsername(username);
-        if(optional.isEmpty()) {
-            return null;
-        }
-        return this.modelMapper.map(optional.get(), PersonDeviceDTO.class);
+        return optional.map(person -> this.modelMapper.map(person, PersonDeviceDTO.class)).orElse(null);
     }
 
     @Override
     public Person findEntityByUsername(String username) {
         Optional<Person> optional = this.personRepository.findPersonByUsername(username);
-        if(optional.isEmpty()) {
-            return null;
-        }
-        return optional.get();
+        return optional.orElse(null);
     }
 
     @Override
@@ -218,10 +221,7 @@ public class PersonServiceImpl implements PersonService, UserDetailsService {
     @Override
     public PersonDeviceDTO findByEmail(String email) {
         Optional<Person> optional = this.personRepository.findPersonByEmail(email);
-        if(optional.isEmpty()) {
-            return null;
-        }
-        return this.modelMapper.map(optional.get(), PersonDeviceDTO.class);
+        return optional.map(person -> this.modelMapper.map(person, PersonDeviceDTO.class)).orElse(null);
     }
 
     @Override
@@ -239,7 +239,13 @@ public class PersonServiceImpl implements PersonService, UserDetailsService {
         if (personOptional.isEmpty()) {
             throw new EntityNotFoundException(Person.class.getSimpleName() + " with id: " + id);
         }
-        personRepository.deleteById(id);
+        // before deleting person, delete all individual chats that contain that person.
+        // cycle through map, delete all chats => delete all messages as well
+        for (Map.Entry<UUID, IndividualChat> chatEntry : personOptional.get().getIndividualChatMap().entrySet()) {
+            chatEntry.getValue().getPersonSet().clear();
+            this.individualChatRepository.save(chatEntry.getValue());
+        }
+        this.personRepository.deleteById(id);
     }
 
     @Override

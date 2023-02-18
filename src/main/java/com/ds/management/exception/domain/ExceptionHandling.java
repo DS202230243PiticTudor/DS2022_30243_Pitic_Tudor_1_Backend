@@ -35,6 +35,7 @@ public class ExceptionHandling implements ErrorController {
     public static final String ERROR_PROCESSING_FILE = "Error occurred while processing file";
     public static final String NOT_ENOUGH_PERMISSION = "You do not have enough permission";
     public static final String ENTITY_NOT_FOUND = "Entity was not found";
+    public static final String SAME_PERSON_EXCEPTION = "You cannot request to connect to the same person";
     public static final String ERROR_PATH = "/error";
 
     @ExceptionHandler(DisabledException.class)
@@ -110,6 +111,12 @@ public class ExceptionHandling implements ErrorController {
     public ResponseEntity<HttpResponse> entityNotFoundException(EntityNotFoundException exception) {
         LOGGER.error(exception.getMessage());
         return createHttpResponse(NOT_FOUND, ENTITY_NOT_FOUND);
+    }
+
+    @ExceptionHandler(ConnectionToSamePersonException.class)
+    public ResponseEntity<HttpResponse> connectionToSamePersonException(ConnectionToSamePersonException exception) {
+        LOGGER.error(exception.getMessage());
+        return createHttpResponse(INTERNAL_SERVER_ERROR, SAME_PERSON_EXCEPTION);
     }
 
     private ResponseEntity<HttpResponse> createHttpResponse(HttpStatus httpStatus, String message) {

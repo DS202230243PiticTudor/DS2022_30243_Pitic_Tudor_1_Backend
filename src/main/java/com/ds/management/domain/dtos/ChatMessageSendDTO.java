@@ -9,7 +9,8 @@ import java.util.UUID;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class IndividualChatRequestDTO {
+public class ChatMessageSendDTO {
     private UUID senderId;
     private UUID peerId;
+    private String content;
 }

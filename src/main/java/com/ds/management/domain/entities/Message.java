@@ -23,11 +23,6 @@ public class Message {
     @Type(type = "uuid-binary")
     private UUID id;
 
-    @ManyToOne
-    @JoinColumn(name = "individual_chat_id", nullable = false)
-    @OnDelete(action = OnDeleteAction.CASCADE)
-    private IndividualChat individualChat;
-
     @Column(name="recipient_id", nullable = false)
     private UUID recipientId;
     @Column(name="content", columnDefinition="TEXT", nullable = false)
@@ -38,4 +33,9 @@ public class Message {
 
     @Column(name = "seen", nullable = false)
     private boolean seen;
+
+    @ManyToOne
+    @JoinColumn(name = "individual_chat_id")
+    @OnDelete(action = OnDeleteAction.CASCADE)
+    private IndividualChat individualChat;
 }

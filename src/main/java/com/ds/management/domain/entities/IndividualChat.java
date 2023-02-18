@@ -2,12 +2,11 @@ package com.ds.management.domain.entities;
 
 import lombok.*;
 import org.hibernate.annotations.GenericGenerator;
-import org.hibernate.annotations.OnDelete;
-import org.hibernate.annotations.OnDeleteAction;
 import org.hibernate.annotations.Type;
 
 import javax.persistence.*;
 import java.util.List;
+import java.util.Set;
 import java.util.UUID;
 
 @Getter
@@ -23,13 +22,8 @@ public class IndividualChat {
     @GenericGenerator(name = "uuid2", strategy = "uuid2")
     @Type(type = "uuid-binary")
     private UUID id;
-    @ManyToOne
-    @JoinColumn(name = "person_id", nullable = false)
-    @OnDelete(action = OnDeleteAction.CASCADE)
-    private Person person;
-    @Column(name = "peer_id", nullable = false)
-    private UUID peerId;
-
+    @ManyToMany
+    private Set<Person> personSet;
     @OneToMany(mappedBy = "individualChat", orphanRemoval = true)
     private List<Message> messages;
 }

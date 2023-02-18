@@ -1,5 +1,6 @@
 package com.ds.management.services;
 
+import com.ds.management.domain.dtos.ChatMessageDTO;
 import com.ds.management.domain.dtos.ResponseMessage;
 import com.ds.management.domain.entities.Notification;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -13,17 +14,12 @@ import java.util.UUID;
 @Service
 public class WebSocketService {
     private final SimpMessagingTemplate simpMessagingTemplate;
-    private NotificationService notificationService;
+    private final NotificationService notificationService;
 
     @Autowired
     public WebSocketService(SimpMessagingTemplate simpMessagingTemplate, NotificationService notificationService) {
         this.simpMessagingTemplate = simpMessagingTemplate;
         this.notificationService = notificationService;
-    }
-
-    public void notifyFrontend(final String message) {
-        ResponseMessage responseMessage = new ResponseMessage(message);
-        simpMessagingTemplate.convertAndSend("/topic/messages", responseMessage);
     }
 
     public void notifyFrontendUserAndDeleteNotifications(final String personIdString) {
@@ -33,9 +29,16 @@ public class WebSocketService {
         }
     }
 
-    public void notifyFrontendUser(final String personidString, Notification notification) {
+    public void notifyFrontendUser(final String personIdString, Notification notification) {
         List<Notification> notificationList = new ArrayList<>();
         notificationList.add(notification);
-        simpMessagingTemplate.convertAndSendToUser(personidString, "/private", notificationList);
+        simpMessagingTemplate.convertAndSendToUser(personIdString, "/private", notificationList);
+    }
+
+    public void sendMessageToUser(UUID senderId, ChatMessageDTO chatMessageDTO) {
+        List<ChatMessageDTO> chatMessageDTOList = new ArrayList<>();
+        chatMessageDTOList.add(chatMessageDTO);
+        simpMessagingTemplate.convertAndSendToUser(senderId.toString(), "/chat", chatMessageDTOList);
+        simpMessagingTemplate.convertAndSendToUser(chatMessageDTO.getRecipientId().toString(), "/chat", chatMessageDTOList);
     }
 }

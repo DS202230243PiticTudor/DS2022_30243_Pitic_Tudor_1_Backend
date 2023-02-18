@@ -1,13 +1,13 @@
 package com.ds.management.web.controllers;
 
 import com.ds.management.domain.dtos.*;
-import com.ds.management.domain.entities.Measurement;
 import com.ds.management.exception.domain.EmailExistException;
 import com.ds.management.exception.domain.ExceptionHandling;
 import com.ds.management.exception.domain.UserNotFoundException;
 import com.ds.management.exception.domain.UsernameExistException;
 import com.ds.management.services.impl.PersonServiceImpl;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
@@ -30,6 +30,12 @@ public class PersonController extends ExceptionHandling {
     @PreAuthorize("hasAnyAuthority('user:read')")
     public List<PersonDeviceDTO> getAll() {
         return this.personService.findAll();
+    }
+
+    @GetMapping(value = "/except/{id}")
+    @PreAuthorize("hasAnyAuthority('user:read')")
+    public List<PersonDeviceDTO> getAllExceptWithId(@PathVariable("id") UUID id) {
+        return this.personService.findAllExceptWithId(id);
     }
 
     @GetMapping(value = "/{id}")
@@ -67,8 +73,8 @@ public class PersonController extends ExceptionHandling {
 
    @PostMapping("/register")
     public ResponseEntity<String> register(@RequestBody PersonCreateDTO dto) throws UserNotFoundException, EmailExistException, UsernameExistException {
-        String id = personService.register(dto);
-        return ResponseEntity.ok().body(id);
+        personService.register(dto);
+        return new ResponseEntity<>(HttpStatus.OK);
    }
 
    @PostMapping("measure/{person_id}")

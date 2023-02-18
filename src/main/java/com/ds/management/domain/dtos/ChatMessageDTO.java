@@ -11,6 +11,7 @@ import java.util.UUID;
 @AllArgsConstructor
 @Builder
 public class ChatMessageDTO {
+    private UUID individualChatId;
     private UUID recipientId;
     private String content;
     private LocalDateTime sentAt;

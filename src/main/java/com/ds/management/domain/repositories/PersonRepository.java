@@ -15,6 +15,7 @@ public interface PersonRepository extends JpaRepository<Person, UUID> {
     @Override
     @Query("select i from Person i order by i.createdDate")
     List<Person> findAll();
+    List<Person> findAllByIdNot(UUID id);
     Optional<Person> findById(UUID id);
     Optional<Person> findPersonByUsername(String username);
     Optional<Person> findPersonByEmail(String email);

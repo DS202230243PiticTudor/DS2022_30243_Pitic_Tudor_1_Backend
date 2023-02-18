@@ -1,6 +1,5 @@
 package com.ds.management.domain.entities;
 
-import com.fasterxml.jackson.annotation.JsonSubTypes;
 import lombok.*;
 import org.hibernate.annotations.GenericGenerator;
 import org.hibernate.annotations.Type;
@@ -58,7 +57,13 @@ public class Person implements Serializable {
     @ToString.Exclude
     private List<Measurement> measurements;
 
-    @OneToMany(mappedBy = "person", orphanRemoval = true)
+    @ManyToMany(cascade = CascadeType.REMOVE)
+    @JoinTable(
+            name = "person_chat_mapping",
+            joinColumns = @JoinColumn(name = "person_id", referencedColumnName = "id"),
+            inverseJoinColumns = @JoinColumn(name = "individual_chat_id", referencedColumnName = "id")
+    )
+    @MapKeyColumn(name = "peer_id")
     @ToString.Exclude
     private Map<UUID, IndividualChat> individualChatMap;
 }
