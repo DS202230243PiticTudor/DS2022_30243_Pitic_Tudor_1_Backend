@@ -1,7 +1,6 @@
 package com.ds.management.services;
 
 import com.ds.management.domain.dtos.ChatMessageDTO;
-import com.ds.management.domain.dtos.ResponseMessage;
 import com.ds.management.domain.entities.Notification;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.messaging.simp.SimpMessagingTemplate;

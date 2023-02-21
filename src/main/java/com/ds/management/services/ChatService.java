@@ -18,6 +18,7 @@ import org.springframework.transaction.annotation.Transactional;
 import javax.persistence.EntityNotFoundException;
 import java.time.LocalDateTime;
 import java.util.*;
+import java.util.stream.Collectors;
 
 @Service
 @Transactional
@@ -65,13 +66,21 @@ public class ChatService {
         IndividualChat individualChat;
         if (person.getIndividualChatMap().containsKey(dto.getPeerId())) {
             individualChat = person.getIndividualChatMap().get(dto.getPeerId());
+            if(individualChat.getPersonSeenMap().containsKey(peer.getId())) {
+                individualChat.getPersonSeenMap().put(person.getId(), Boolean.TRUE);
+            }
+            this.individualChatRepository.save(individualChat);
         } else {
             Set<Person> personSet = new HashSet<>();
             personSet.add(person);
             personSet.add(peer);
+            Map<UUID, Boolean> personSeenMap = new HashMap<>();
+            personSeenMap.put(person.getId(), Boolean.TRUE);
+            personSeenMap.put(peer.getId(), Boolean.FALSE);
             individualChat = IndividualChat.builder()
                     .personSet(personSet)
                     .messages(new ArrayList<>())
+                    .personSeenMap(personSeenMap)
                     .build();
             this.individualChatRepository.save(individualChat);
             person.getIndividualChatMap().put(dto.getPeerId(), individualChat);
@@ -81,6 +90,17 @@ public class ChatService {
         }
         List<ChatMessageDTO> messageDTOList = new ArrayList<>();
         if (!individualChat.getMessages().isEmpty()){
+            // get all messages from this chat, that are not mine and that are not seen
+            List<Message> unseenMessages = individualChat.getMessages().stream()
+                    .filter(message -> !message.isSeen() && message.getRecipientId().equals(person.getId()))
+                    .collect(Collectors.toList());
+            for (Message message :
+                    unseenMessages) {
+                message.setSeen(true);
+                this.messageRepository.save(message);
+            }
+            Comparator<Message> byLocalDateTime = Comparator.comparing(Message::getSentAt);
+            individualChat.getMessages().sort(byLocalDateTime);
             individualChat.getMessages().forEach(message -> {
                 ChatMessageDTO messageDTO = this.modelMapper.map(message, ChatMessageDTO.class);
                 messageDTO.setIndividualChatId(individualChat.getId());

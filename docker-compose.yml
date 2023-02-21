@@ -45,9 +45,9 @@ services:
     image: rabbitmq:3-management
     container_name: rabbitmq
     ports:
-      - 5672:5672
-      - 5673:5673
-      - 15672:15672
+      - "5672:5672"
+      - "5673:5673"
+      - "15672:15672"
     volumes:
       - ~/.docker-conf/rabbitmq/data/:/var/lib/rabbitmq/
       - ~/.docker-conf/rabbitmq/log/:/var/log/rabbitmq
@@ -84,7 +84,7 @@ services:
       - environment.env
     container_name: management-app-fe
     ports:
-      - 4200:4200
+      - "4200:4200"
     expose:
       - 4200
     networks:

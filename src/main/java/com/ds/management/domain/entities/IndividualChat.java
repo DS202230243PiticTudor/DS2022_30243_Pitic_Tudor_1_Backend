@@ -6,6 +6,7 @@ import org.hibernate.annotations.Type;
 
 import javax.persistence.*;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
 
@@ -26,4 +27,7 @@ public class IndividualChat {
     private Set<Person> personSet;
     @OneToMany(mappedBy = "individualChat", orphanRemoval = true)
     private List<Message> messages;
+    @ElementCollection
+    @MapKeyColumn(name = "person_id")
+    private Map<UUID, Boolean> personSeenMap;
 }
